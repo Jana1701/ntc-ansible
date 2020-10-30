@@ -1,0 +1,39 @@
+---
+
+    - name: TEST REACHABILITY
+      hosts: iosxe
+      connection: network_cli
+      gather_facts: no
+  
+      vars:
+        target_ips:
+          - "10.0.0.15"
+          - "10.0.0.2"
+          - "198.6.1.4"
+
+      tasks:
+        - name: GET SHOW COMMANDS
+          ios_command:
+            commands: "ping {{ item }} repeat 2"
+          register: response
+          loop: "{{ target_ips }}"
+    
+        - name: VIEW DATA STORED IN CONFIG_DATA
+          debug:
+            var: response
+
+        - name: Looping over registered variable
+          debug:
+            var: "{{ item }}"
+          loop: "{{ response.results }}"
+
+        - name: GENERATE DIRECTORIES
+          file:
+            path: ./ping-responses/{{ ansible_host }}
+            state: directory
+
+        - name: SAVE Ping TO FILE
+          template:
+            src: ping.j2
+            dest: ./ping-responses/{{ ansible_host }}/to_{{ item.item }}.md
+          loop: "{{ response.results }}"
