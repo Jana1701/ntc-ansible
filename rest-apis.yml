@@ -1,0 +1,28 @@
+---
+
+    - name: PLAY 1 - ISSUE API CALL TO CSR
+      hosts: csr2
+      connection: local
+      gather_facts: no
+      tags: ios
+  
+      tasks:
+  
+        - name: GET INTERFACE IP ADDRESS
+          uri:
+            url: https://{{ inventory_hostname }}/restconf/data/Cisco-IOS-XE-native:native/interface=GigabitEthernet/2/ip/address
+            method: GET
+            user: "{{ ansible_user }}"
+            password: "{{ ansible_ssh_pass }}"
+            return_content: yes
+            validate_certs: no
+            headers:
+              Content-Type: application/yang-data+json
+              Accept: application/yang-data+json
+          register: response
+  
+        - set_fact:
+            ip_info: "{{ response['content'] | from_json }}"
+
+        - debug:
+            var: ip_info['Cisco-IOS-XE-native:address']['primary']['address']
